@@ -12,4 +12,4 @@ Python libraries: scikit-learn, pandas, numpy, matplotlib
 
 
 ## 📸 Example Outputs
-![image alt](https://github.com/SaeidDaliriSusefi/PERSIANN-CDR-Downscaling/blob/b70c7a28446e3f973341731414bce5edc966a1cc/Images/Precipitation.PNG)
+![image alt](https://github.com/SaeidDaliriSusefi/SMAP-Downscaling/blob/1421b5387fc6f723d625da68de762892e14890ba/Images/SMAP.PNG)

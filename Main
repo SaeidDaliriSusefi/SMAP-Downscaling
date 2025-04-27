@@ -1,17 +1,18 @@
-var cor = [
-  [45.69105798238498,28.274725424381415],
-  [52.45863610738498,28.274725424381415],
-  [52.45863610738498,34.24300069681132], 
-  [45.69105798238498,34.24300069681132],
-  [45.69105798238498,28.274725424381415]
-  ]
+var country_name =  'Italy'                            
+var region_name = 'Lombardia'  
+var time_start = '2020'
+var time_end = '2021'
 
-var geometry = ee.Geometry.Polygon(cor)
+// Load and filter administrative boundaries
+var Region = ee.FeatureCollection("FAO/GAUL_SIMPLIFIED_500m/2015/level1")
+  .filter(ee.Filter.and(
+    ee.Filter.eq('ADM0_NAME', country_name),
+    ee.Filter.eq('ADM1_NAME', region_name)));
+ 
+Map.centerObject(Region)
+Map.addLayer(Region)
 
-
-Map.centerObject(geometry)
-
-var time_start = ee.Date('2023'), time_end = ee.Date('2024')
+var time_start = ee.Date(time_start), time_end = ee.Date(time_end)
 
 var sm = ee.ImageCollection("NASA/SMAP/SPL3SMP_E/006")
 .select('soil_moisture_am')
@@ -33,7 +34,7 @@ var sm_10days = ee.ImageCollection(list_10days.map(function(start_date){
   .set('system:index', start_date.format('YYYY-MM-dd'))
   }));
   
-Map.addLayer(sm_10days.toBands().clip(geometry), [], 'sm_9km', false)
+Map.addLayer(sm_10days.toBands().clip(Region), [], 'sm_9km', false)
 
 var temp = ee.ImageCollection("MODIS/061/MOD11A1")
 .select('LST_.*')
@@ -76,7 +77,7 @@ var sr_10days = ee.ImageCollection(list_10days.map(function(start_date){
   }));
   
 
-Map.addLayer(sr.toBands().clip(geometry),[],'sr',false)
+Map.addLayer(sr.toBands().clip(Region),[],'sr',false)
 
 var landcover = ee.ImageCollection("MODIS/061/MCD12Q1").mode().select('LC_Type1')
 
@@ -89,7 +90,7 @@ var collection = sr_10days.combine(temp_10days).combine(sm_10days)
 var sm_1km = collection.map(function(img){
   
   var training_data = img.stratifiedSample({
-    numPoints: 10, classBand: 'soil_moisture_am', region: geometry, scale: 1000
+    numPoints: 10, classBand: 'soil_moisture_am', region: Region, scale: 1000
     });
     
   var model = ee.Classifier.smileGradientTreeBoost(80).train({
@@ -119,15 +120,14 @@ var sm_cor =  sm_1km.map(function(img){
 print(sm_cor)
 
 
-Map.addLayer(sm_cor.toBands().clip(geometry), [], 'sm_1km', false)
+Map.addLayer(sm_cor.toBands().clip(Region), [], 'sm_1km', false)
 
 
 Export.image.toDrive({
-  image: sm_cor.toBands().clip(geometry), 
+  image: sm_cor.toBands().clip(Region), 
   description: 'sm_1km_cor', 
   folder: 'test', 
-  region: geometry, 
+  region: Region, 
   scale: 1000, 
   crs: 'EPSG:4326'
   })
-
